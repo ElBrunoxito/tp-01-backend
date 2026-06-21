@@ -4,6 +4,7 @@ import com.yobrunox.tp01backendhwt.dto.CodeDTO;
 import com.yobrunox.tp01backendhwt.dto.LoginRequestDTO;
 import com.yobrunox.tp01backendhwt.dto.UpdateUserDTO;
 import com.yobrunox.tp01backendhwt.dto.ResponseUserDTO;
+import com.yobrunox.tp01backendhwt.model.ChildRoutine;
 import com.yobrunox.tp01backendhwt.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -73,7 +74,6 @@ public class AuthController {
         userService.changePassword(dto);
         return ResponseEntity.noContent().build();
     }
-
 
     @GetMapping("test/token")
     public ResponseEntity<Void> testToken() {

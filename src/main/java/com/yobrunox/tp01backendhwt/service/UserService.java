@@ -6,14 +6,8 @@ import com.yobrunox.tp01backendhwt.dto.UpdateUserDTO;
 import com.yobrunox.tp01backendhwt.dto.ResponseUserDTO;
 import com.yobrunox.tp01backendhwt.exception.BusinessException;
 import com.yobrunox.tp01backendhwt.mail.MailSend;
-import com.yobrunox.tp01backendhwt.model.Child;
-import com.yobrunox.tp01backendhwt.model.Code;
-import com.yobrunox.tp01backendhwt.model.Role;
-import com.yobrunox.tp01backendhwt.model.User;
-import com.yobrunox.tp01backendhwt.repository.ChildRepository;
-import com.yobrunox.tp01backendhwt.repository.CodeRepository;
-import com.yobrunox.tp01backendhwt.repository.RoleRepository;
-import com.yobrunox.tp01backendhwt.repository.UserRepository;
+import com.yobrunox.tp01backendhwt.model.*;
+import com.yobrunox.tp01backendhwt.repository.*;
 import com.yobrunox.tp01backendhwt.security.JwtService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +33,7 @@ import java.util.stream.Collectors;
 public class UserService {
     private final UserRepository userRepository;
     private final ChildRepository childRepository;
+    private final ChildRoutineRepository childRoutineRepository;
     private final MailSend mailSend;
     private final CodeRepository codeRepository;
     private final AuthenticationManager authenticationManager;
@@ -60,6 +55,7 @@ public class UserService {
                 .ageChild(Objects.isNull(user.getChild()) ? null : user.getChild().getAge())
                 .genderChild(Objects.isNull(user.getChild()) ? null : user.getChild().getGender())
                 .levelTEA(Objects.isNull(user.getChild()) ? null : user.getChild().getLevelTEA())
+                .currentProgress(Objects.isNull(user.getChild()) ? 0 : this.getCurrentProgressByIdChild(user.getChild().getId()))
                 .build();
     }
 
@@ -80,6 +76,7 @@ public class UserService {
                 .ageChild(Objects.isNull(user.getChild()) ? null : user.getChild().getAge())
                 .genderChild(Objects.isNull(user.getChild()) ? null : user.getChild().getGender())
                 .levelTEA(Objects.isNull(user.getChild()) ? null : user.getChild().getLevelTEA())
+                .currentProgress(Objects.isNull(user.getChild()) ? 0 : this.getCurrentProgressByIdChild(user.getChild().getId()))
                 .build();
         return response;
     }
@@ -145,20 +142,17 @@ public class UserService {
                 );
 
         Child child;
-        System.out.println("PASO POR AQUI 0");
 
         if (Objects.isNull(user.getChild())){
-            System.out.println("PASO POR AQUI 1");
             child = Child.builder()
                     .name(userGetDTO.getNameChild() == "" ? user.getChild().getName() : userGetDTO.getNameChild() )
                     .age(userGetDTO.getAgeChild() == null ? user.getChild().getAge() : userGetDTO.getAgeChild() )
-                    .gender(userGetDTO.getNameChild() == "" ? user.getChild().getName() : userGetDTO.getNameChild())
+                    .gender(userGetDTO.getGenderChild() == "" ? user.getChild().getName() : userGetDTO.getGenderChild())
                     .levelTEA(user.getChild() == null ? 0 :user.getChild().getLevelTEA())
                     .build();
             child = childRepository.save(child);
             user.setChild(child);
         }else{
-            System.out.println("PASO POR AQUI 2");
             child = Child.builder()
                     .id(user.getChild().getId())
                     .name(userGetDTO.getNameChild() == "" ? user.getChild().getName() : userGetDTO.getNameChild() )
@@ -205,15 +199,10 @@ public class UserService {
                 .ageChild(child.getAge())
                 .genderChild(child.getGender())
                 .levelTEA(child.getLevelTEA())
+                .currentProgress(Objects.isNull(user.getChild()) ? 0 : this.getCurrentProgressByIdChild(user.getChild().getId()))
                 .build();
         return response;
     }
-
-    public User getUserByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "Recurso no encontrada" ));
-    }
-
     public void sendCodeToEmail(String username){
         User user = userRepository.findByUsername(username)
                 .orElseThrow(
@@ -257,6 +246,17 @@ public class UserService {
                 );
         user.setPassword(passwordEncoder.encode(requestDTO.getPassword()));
         userRepository.save(user);
+    }
+
+    private Integer getCurrentProgressByIdChild(UUID idChild){
+        ChildRoutine lastRoutine = childRoutineRepository.findTopByChild_IdOrderByCreatedDateDesc(idChild)
+                .orElse(null);
+        if(Objects.isNull(lastRoutine)){
+            return 0;
+        }
+        Long res = ((lastRoutine.getRoutine().getId() % 10)*10);
+        return res.intValue();
+
     }
 
 
