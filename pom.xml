@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.yobrunox</groupId>
     <artifactId>tp01-backend-hwt</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>tp01-backend-hwt</name>
     <description>tp01-backend-hwt</description>
     <url/>
